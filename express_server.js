@@ -170,22 +170,12 @@ app.post("/logout", (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
-
-
 // listen to the port
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-
+// Practice
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
