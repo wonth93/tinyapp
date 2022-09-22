@@ -29,11 +29,11 @@ const users = {
 };
 
 // Generate a random shrt URL ID
-function generateRandomString() {
+const generateRandomString = function () {
   let result = '';
-  const alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwayz0123456789'
+  const alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwayz0123456789';
   for (let i = 0; i < 6; i++) {
-    result += alph.charAt(Math.floor(Math.random() * alph.length))
+    result += alph.charAt(Math.floor(Math.random() * alph.length));
   }
   return result;
 };
@@ -46,7 +46,7 @@ const getUserByEmail = function (email) {
     }
   }
   return null;
-}
+};
 
 
 // Root page
@@ -128,7 +128,7 @@ app.post("/register", (req, res) => {
   const user = getUserByEmail(email);
   if (user) {
     return res.status(400).send("User email is already existed!");
-  } 
+  }
   
   users[userID] = {
     id: userID,
