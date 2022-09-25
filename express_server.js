@@ -1,10 +1,7 @@
+// Requirements
 const express = require("express");
-const app = express();
-// const cookieParser = require("cookie-parser");
 const cookieSession = require("cookie-session");
-const PORT = 8080;
 const bcrypt = require("bcryptjs");
-
 const {
   getUserByEmail,
   generateRandomString,
@@ -14,19 +11,21 @@ const {
   matchingUser
 } = require('./helper');
 
-// Setup
+// Setup and middlewares
+const app = express();
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
-// app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2'],
-
+  
   maxAge: 10 * 60 * 1000 // 10 mins
 }));
 
+const PORT = 8080;
 
-// Database
+
+// URL and users Database
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -52,7 +51,7 @@ const users = {
 };
 
 
-// Root page
+// Root page just print Hello!
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -62,7 +61,7 @@ app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
   const userEmail = users[userID];
   const filterList = urlsForUser(userID, urlDatabase);
-  const templateVars = { urls: filterList, userEmail};
+  const templateVars = { urls: filterList, userEmail };
   
   if (!userID) {
     return res.status(403).send("Please login!");
@@ -71,7 +70,7 @@ app.get("/urls", (req, res) => {
   res.render('urls_index', templateVars);
 });
 
-// add new URL
+// Access page for adding new URL
 app.get("/urls/new", (req, res) => {
   const userID = req.session.user_id;
   const userEmail = users[userID];
@@ -84,7 +83,7 @@ app.get("/urls/new", (req, res) => {
   res.redirect("/login");
 });
 
-// Post back on the home page
+// Post URL on the home page
 app.post("/urls", (req, res) => {
   const userID = req.session.user_id;
   const user = users[userID];
@@ -175,6 +174,7 @@ app.get("/register", (req, res) => {
   res.redirect("/urls");
 });
 
+// Register endpoint
 app.post("/register", (req, res) => {
   const userID = generateRandomString();
   const email = req.body.email;
@@ -196,7 +196,6 @@ app.post("/register", (req, res) => {
     password: hashedPassword
   };
   
-  // res.cookie("user_id", userID);
   req.session.user_id = userID;
   res.redirect("/urls");
 });
@@ -246,13 +245,4 @@ app.post("/logout", (req, res) => {
 // listen to the port
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
-});
-
-// Practice
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
