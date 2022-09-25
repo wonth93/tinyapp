@@ -242,7 +242,7 @@ app.post("/logout", (req, res) => {
 });
 
 
-// listen to the port
+// Listen to the port
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
