@@ -5,6 +5,15 @@ const cookieSession = require("cookie-session");
 const PORT = 8080;
 const bcrypt = require("bcryptjs");
 
+const {
+  getUserByEmail,
+  generateRandomString,
+  getID,
+  findShortURL,
+  urlsForUser,
+  matchingUser
+} = require('./helper');
+
 // Setup
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
@@ -42,65 +51,6 @@ const users = {
   },
 };
 
-// Generate a random shrt URL ID
-const generateRandomString = function() {
-  let result = '';
-  const alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwayz0123456789';
-  for (let i = 0; i < 6; i++) {
-    result += alph.charAt(Math.floor(Math.random() * alph.length));
-  }
-  return result;
-};
-
-// Find email
-const getUserByEmail = function(email) {
-  for (const userID in users) {
-    if (users[userID].email === email) {
-      return users[userID];
-    }
-  }
-  return null;
-};
-
-// Find ID
-const getID = function(email) {
-  for (const userID in users) {
-    if (users[userID].email === email) {
-      return userID;
-    }
-  }
-  return null;
-};
-
-// Find short URL ID
-const findShortURL = function(id) {
-  for (const key in urlDatabase) {
-    if (key === id) {
-      return true;
-    }
-  }
-  return null;
-};
-
-// Find user's URL
-const urlsForUser = function(id) {
-  const listOfURLs = {};
-  for (const key in urlDatabase) {
-    if (urlDatabase[key]["userID"] === id) {
-      listOfURLs[key] = urlDatabase[key]["longURL"];
-    }
-  }
-  return listOfURLs;
-};
-
-// Find matching user
-const matchingUser = function(user, id) {
-  if (urlDatabase[id]["userID"] === user) {
-    return true;
-  }
-  return false;
-};
-
 
 // Root page
 app.get("/", (req, res) => {
@@ -111,7 +61,7 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
   const userEmail = users[userID];
-  const filterList = urlsForUser(userID);
+  const filterList = urlsForUser(userID, urlDatabase);
   const templateVars = { urls: filterList, userEmail};
   
   if (!userID) {
@@ -154,10 +104,10 @@ app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const userID = req.session.user_id;
   const userEmail = users[userID];
-  const filterList = urlsForUser(userID);
+  const filterList = urlsForUser(userID, urlDatabase);
   const templateVars = { id, longURL: filterList[id], userEmail };
-  const matchingID = findShortURL(id);
-  const matchuser = matchingUser(userID, id);
+  const matchingID = findShortURL(id, urlDatabase);
+  const matchuser = matchingUser(userID, id, urlDatabase);
 
   if (!matchingID) {
     return res.status(400).send("Short URL ID does not exist!");
@@ -235,7 +185,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Please enter your email or password!");
   }
 
-  const user = getUserByEmail(email);
+  const user = getUserByEmail(email, users);
   if (user) {
     return res.status(400).send("User email is already existed!");
   }
@@ -268,8 +218,8 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = getUserByEmail(email);
-  const userID = getID(email);
+  const user = getUserByEmail(email, users);
+  const userID = getID(email, users);
   
   if (!user) {
     return res.status(403).send("Account is not found!");
